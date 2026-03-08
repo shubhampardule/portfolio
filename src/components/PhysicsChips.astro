@@ -136,7 +136,7 @@ const allChips = techStackGroups.flatMap(({ title, items }) =>
 
   // Create chip bodies
   interface ChipInfo {
-    body: Matter.Body;
+    body: ReturnType<typeof Bodies.circle>;
     label: string;
     group: string;
     w: number;
