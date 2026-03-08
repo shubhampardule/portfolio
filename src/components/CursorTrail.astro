@@ -1,0 +1,176 @@
+<!-- Spring Cursor Trail — glowing particles follow cursor with spring physics -->
+<canvas id="cursor-trail" class="pointer-events-none fixed inset-0 z-[9999] h-full w-full"></canvas>
+
+<script>
+  const canvas = document.getElementById("cursor-trail") as HTMLCanvasElement;
+  const ctx = canvas.getContext("2d")!;
+
+  // Only enable on devices with a real hover-capable fine pointer (mouse/trackpad)
+  const hasCursor = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+  if (!hasCursor) {
+    canvas.style.display = "none";
+    (window as any).__trailDots = [];
+  }
+
+  let W = 0, H = 0;
+  function resize() {
+    W = canvas.width = window.innerWidth;
+    H = canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener("resize", resize);
+
+  // Mouse state
+  let mx = -9999, my = -9999;
+  let mouseActive = false;
+  let overInteractive = false;
+
+  document.addEventListener("mousemove", (e) => {
+    mx = e.clientX;
+    my = e.clientY;
+    mouseActive = true;
+    // Check if cursor is over an interactive element
+    const el = e.target as HTMLElement;
+    overInteractive = !!(el && el.closest("a, button, [data-magnetic]"));
+  });
+  document.addEventListener("mouseleave", () => {
+    mouseActive = false;
+    overInteractive = false;
+  });
+
+  // Trail particles with spring physics
+  const N = 16;
+  interface Dot {
+    x: number; y: number;
+    vx: number; vy: number;
+    size: number;
+    alpha: number;
+    hue: number;
+  }
+
+  const dots: Dot[] = [];
+  for (let i = 0; i < N; i++) {
+    dots.push({
+      x: -100, y: -100,
+      vx: 0, vy: 0,
+      size: 6 - (i / N) * 4,       // head = 6px, tail = 2px
+      alpha: 1 - (i / N) * 0.8,    // head opaque, tail faint
+      hue: 0,
+    });
+  }
+
+  // Spring constants — each dot follows the previous one
+  const stiffness = 0.12;
+  const damping = 0.72;
+
+  // Theme-aware color
+  function getPrimaryHSL(): [number, number, number] {
+    // Read the CSS --color-primary or fall back to a nice blue-cyan
+    const style = getComputedStyle(document.documentElement);
+    const raw = style.getPropertyValue("--color-primary").trim();
+    // If it's an oklch/rgb/hex, just use a default glow
+    return [210, 100, 60];
+  }
+
+  let animId = 0;
+  let cursorPaused = false;
+
+  document.addEventListener("visibilitychange", () => {
+    cursorPaused = document.hidden;
+  });
+
+  function loop() {
+    animId = requestAnimationFrame(loop);
+    if (cursorPaused) return;
+    ctx.clearRect(0, 0, W, H);
+
+    if (!mouseActive) {
+      // fade dots off-screen
+      for (const d of dots) {
+        d.alpha *= 0.92;
+      }
+    }
+
+    // Update positions with spring physics
+    for (let i = 0; i < N; i++) {
+      const d = dots[i];
+      // Target: previous dot, or mouse for first dot
+      const tx = i === 0 ? mx : dots[i - 1].x;
+      const ty = i === 0 ? my : dots[i - 1].y;
+
+      // Spring force
+      const dx = tx - d.x;
+      const dy = ty - d.y;
+
+      d.vx += dx * stiffness;
+      d.vy += dy * stiffness;
+
+      // Damping
+      d.vx *= damping;
+      d.vy *= damping;
+
+      d.x += d.vx;
+      d.y += d.vy;
+
+      // Reset alpha when mouse is active
+      if (mouseActive) {
+        d.alpha = 1 - (i / N) * 0.8;
+      }
+    }
+
+    // Expose trail dot positions globally so other physics systems can react
+    (window as any).__trailDots = dots.map(d => ({ x: d.x, y: d.y, size: d.size }));
+
+    // Detect dark mode (primary color glow) — check once per frame is cheap
+    const isDark = document.documentElement.classList.contains("dark");
+
+    // Interaction boost — trail gets excited near hoverable elements
+    const boost = overInteractive ? 1 : 0;
+    const sizeMultiplier = 1 + boost * 0.6;
+    const glowMultiplier = 1 + boost * 0.8;
+    const lineAlpha = overInteractive ? 0.25 : (isDark ? 0.12 : 0.08);
+
+    // Draw connecting line (faint)
+    ctx.beginPath();
+    ctx.moveTo(dots[0].x, dots[0].y);
+    for (let i = 1; i < N; i++) {
+      ctx.lineTo(dots[i].x, dots[i].y);
+    }
+    ctx.strokeStyle = isDark
+      ? `rgba(139, 92, 246, ${lineAlpha})`
+      : `rgba(99, 102, 241, ${lineAlpha})`;
+    ctx.lineWidth = overInteractive ? 3 : 2;
+    ctx.stroke();
+
+    // Draw dots
+    for (let i = 0; i < N; i++) {
+      const d = dots[i];
+      if (d.alpha < 0.01) continue;
+
+      const t = i / N;
+
+      // Gradient color: head = primary, tail = cyan shift
+      const hue = isDark ? 270 + t * 60 : 230 + t * 40;
+      const sat = isDark ? 80 : 70;
+      const lum = isDark ? 65 + boost * 10 : 55 + boost * 10;
+
+      ctx.beginPath();
+      ctx.arc(d.x, d.y, d.size * sizeMultiplier, 0, Math.PI * 2);
+
+      // Glow
+      ctx.shadowColor = `hsla(${hue}, ${sat}%, ${lum}%, ${d.alpha * 0.6 * glowMultiplier})`;
+      ctx.shadowBlur = (12 + (1 - t) * 8) * glowMultiplier;
+
+      ctx.fillStyle = `hsla(${hue}, ${sat}%, ${lum}%, ${d.alpha * 0.7})`;
+      ctx.fill();
+    }
+
+    // Reset shadow
+    ctx.shadowColor = "transparent";
+    ctx.shadowBlur = 0;
+  }
+
+  if (hasCursor) {
+    loop();
+  }
+</script>

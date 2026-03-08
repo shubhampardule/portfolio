@@ -1,0 +1,351 @@
+---
+import Menu from "@icons/Menu.astro";
+import { Image } from "astro:assets";
+import type { HeaderProps } from "@types";
+
+type Props = HeaderProps;
+
+const { siteLogo, navLinks } = Astro.props;
+---
+
+<header
+  class="sticky top-0 z-50 mx-auto flex max-w-5xl animate-slide-in justify-between bg-black px-5 py-6"
+>
+  <a href="/" aria-label="Home link">
+    <Image
+      class="rounded-full"
+      src={siteLogo}
+      width="45"
+      height="45"
+      alt="website logo"
+    />
+  </a>
+
+  <div class="flex items-center gap-2 sm:hidden">
+    <button
+      type="button"
+      id="theme-toggle-mobile"
+      class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium text-black dark:text-white disabled:pointer-events-none disabled:opacity-50 shrink-0 outline-none h-8 w-8 md:h-9 md:w-9 transition-all duration-300 ease-in-out hover:opacity-80 motion-reduce:transition-none"
+      aria-label="Toggle theme"
+      title="Toggle theme"
+    >
+      <svg
+        data-icon-sun
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="h-3.5 w-3.5 md:h-4 md:w-4 transition-all duration-300 ease-in-out motion-reduce:transition-none"
+        aria-hidden="true"
+      >
+        <circle cx="12" cy="12" r="4"></circle>
+        <path d="M12 2v2"></path>
+        <path d="M12 20v2"></path>
+        <path d="m4.93 4.93 1.41 1.41"></path>
+        <path d="m17.66 17.66 1.41 1.41"></path>
+        <path d="M2 12h2"></path>
+        <path d="M20 12h2"></path>
+        <path d="m6.34 17.66-1.41 1.41"></path>
+        <path d="m19.07 4.93-1.41 1.41"></path>
+      </svg>
+      <svg
+        data-icon-moon
+        xmlns="http://www.w3.org/2000/svg"
+        width="24"
+        height="24"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        class="hidden h-3.5 w-3.5 md:h-4 md:w-4 transition-all duration-300 ease-in-out motion-reduce:transition-none"
+        aria-hidden="true"
+      >
+        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9"></path>
+      </svg>
+    </button>
+
+    <button
+      type="button"
+      id="menu-button"
+      class="px-1.5 text-neutral"
+      aria-expanded="false"
+      aria-controls="main-menu"
+    >
+      <Menu />
+    </button>
+  </div>
+
+  <nav
+    class="absolute top-20 right-5 hidden rounded-xl border border-neutral/40 bg-black px-4 py-5 text-neutral sm:static sm:block sm:border-0 sm:bg-transparent sm:p-0"
+    id="main-menu"
+  >
+    <ul class="items-center gap-2 sm:flex">
+      {
+        navLinks.map((link) => (
+          <li class="relative">
+            <a
+              class={`nav-item relative block p-2 text-sm font-medium transition-all duration-500 after:absolute after:bottom-0 after:left-2/4 after:h-2 after:w-1 after:-translate-x-2/4 after:text-primary after:opacity-0 after:content-['•'] hover:text-white ${link.icon === 'gamepad' ? 'flex items-center gap-1' : ''}`}
+              href={link.href}
+              {...(link.href === '/game' ? { 'data-astro-reload': true } : {})}
+            >
+              {link.icon === 'gamepad' && <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline-block"><line x1="6" x2="10" y1="11" y2="11"/><line x1="8" x2="8" y1="9" y2="13"/><line x1="15" x2="15.01" y1="12" y2="12"/><line x1="18" x2="18.01" y1="10" y2="10"/><path d="M17.32 5H6.68a4 4 0 0 0-3.978 3.59c-.006.052-.01.101-.017.152C2.604 9.416 2 14.456 2 16a3 3 0 0 0 3 3c1 0 1.5-.5 2-1l1.414-1.414A2 2 0 0 1 9.828 16h4.344a2 2 0 0 1 1.414.586L17 18c.5.5 1 1 2 1a3 3 0 0 0 3-3c0-1.545-.604-6.584-.685-7.258-.007-.05-.011-.1-.017-.151A4 4 0 0 0 17.32 5z"/></svg>}
+              {link.text}
+            </a>
+          </li>
+        ))
+      }
+      <li class="relative sm:block">
+        <button
+          type="button"
+          id="theme-toggle-desktop"
+          class="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium text-black dark:text-white disabled:pointer-events-none disabled:opacity-50 shrink-0 outline-none h-8 w-8 md:h-9 md:w-9 transition-all duration-300 ease-in-out hover:opacity-80 motion-reduce:transition-none"
+          aria-label="Toggle theme"
+          title="Toggle theme"
+        >
+          <svg
+            data-icon-sun
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="h-3.5 w-3.5 md:h-4 md:w-4 transition-all duration-300 ease-in-out motion-reduce:transition-none"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="4"></circle>
+            <path d="M12 2v2"></path>
+            <path d="M12 20v2"></path>
+            <path d="m4.93 4.93 1.41 1.41"></path>
+            <path d="m17.66 17.66 1.41 1.41"></path>
+            <path d="M2 12h2"></path>
+            <path d="M20 12h2"></path>
+            <path d="m6.34 17.66-1.41 1.41"></path>
+            <path d="m19.07 4.93-1.41 1.41"></path>
+          </svg>
+          <svg
+            data-icon-moon
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="hidden h-3.5 w-3.5 md:h-4 md:w-4 transition-all duration-300 ease-in-out motion-reduce:transition-none"
+            aria-hidden="true"
+          >
+            <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9"></path>
+          </svg>
+        </button>
+      </li>
+    </ul>
+  </nav>
+</header>
+
+<script is:inline>
+  function initHeader() {
+  // Toggle mobile menu
+  var button = document.querySelector("#menu-button");
+  var menu = document.querySelector("#main-menu");
+  var navItems = document.querySelectorAll("#main-menu > ul > li > a");
+  var themeToggleDesktop = document.querySelector("#theme-toggle-desktop");
+  var themeToggleMobile = document.querySelector("#theme-toggle-mobile");
+
+  function updateThemeIcons() {
+    const isDark = document.documentElement.classList.contains("dark");
+
+    [themeToggleDesktop, themeToggleMobile].forEach((button) => {
+      if (!button) return;
+      const sunIcon = button.querySelector("[data-icon-sun]");
+      const moonIcon = button.querySelector("[data-icon-moon]");
+      sunIcon?.classList.toggle("hidden", isDark);
+      moonIcon?.classList.toggle("hidden", !isDark);
+
+      button.setAttribute(
+        "aria-label",
+        isDark ? "Switch to light mode" : "Switch to dark mode",
+      );
+      button.setAttribute(
+        "title",
+        isDark ? "Switch to light mode" : "Switch to dark mode",
+      );
+    });
+  }
+
+  function setDarkTheme() {
+    const isDark = true;
+    document.documentElement.classList.toggle("dark", isDark);
+    document.documentElement.classList.toggle("light", !isDark);
+    document.documentElement.style.colorScheme = "dark";
+    localStorage.setItem("theme", "dark");
+    updateThemeIcons();
+  }
+
+  function setLightTheme() {
+    const isDark = false;
+    document.documentElement.classList.toggle("dark", isDark);
+    document.documentElement.classList.toggle("light", !isDark);
+    document.documentElement.style.colorScheme = "light";
+    localStorage.setItem("theme", "light");
+    updateThemeIcons();
+  }
+
+  var getCurrentTheme = function() {
+    if (document.documentElement.classList.contains("dark")) return "dark";
+    return "light";
+  };
+
+  var applyTheme = function(nextTheme) {
+    if (nextTheme === "dark") {
+      setDarkTheme();
+      return;
+    }
+
+    setLightTheme();
+  };
+
+  var animateThemeSwitch = function(nextTheme, x, y) {
+    var prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var canAnimate = typeof document.startViewTransition === "function" && !prefersReducedMotion;
+    if (!canAnimate) {
+      applyTheme(nextTheme);
+      return;
+    }
+
+    var vw = window.innerWidth;
+    var vh = window.innerHeight;
+    var endRadius = Math.hypot(Math.max(x, vw - x), Math.max(y, vh - y));
+    var isToDark = nextTheme === "dark";
+
+    document.documentElement.classList.add(isToDark ? "theme-to-dark" : "theme-to-light");
+
+    var transition = document.startViewTransition(function() {
+      applyTheme(nextTheme);
+    });
+
+    var animationFinished = transition.ready.then(function() {
+      return document.documentElement.animate(
+        {
+          clipPath: isToDark
+            ? [
+                "circle(" + endRadius + "px at " + x + "px " + y + "px)",
+                "circle(0px at " + x + "px " + y + "px)",
+              ]
+            : [
+                "circle(0px at " + x + "px " + y + "px)",
+                "circle(" + endRadius + "px at " + x + "px " + y + "px)",
+              ],
+        },
+        {
+          duration: 650,
+          easing: "cubic-bezier(0.22, 1, 0.36, 1)",
+          fill: "both",
+          pseudoElement: isToDark
+            ? "::view-transition-old(root)"
+            : "::view-transition-new(root)",
+        },
+      ).finished;
+    }).catch(function() {
+      applyTheme(nextTheme);
+    });
+
+    Promise.allSettled([transition.finished, animationFinished]).finally(function() {
+      document.documentElement.classList.remove("theme-to-dark", "theme-to-light");
+    });
+  };
+
+  var toggleTheme = function(originEl) {
+    var nextTheme = getCurrentTheme() === "dark" ? "light" : "dark";
+    var x = window.innerWidth / 2;
+    var y = window.innerHeight / 2;
+
+    if (originEl) {
+      var rect = originEl.getBoundingClientRect();
+      x = rect.left + rect.width / 2;
+      y = rect.top + rect.height / 2;
+    }
+
+    animateThemeSwitch(nextTheme, x, y);
+  };
+
+  // Rebind delegated handler each init to avoid stale or duplicated listeners.
+  var prevThemeHandler = window.__themeDelegateHandler;
+  if (prevThemeHandler) {
+    document.removeEventListener("click", prevThemeHandler, true);
+  }
+
+  var nextThemeHandler = function(event) {
+    var target = event.target;
+    if (!(target instanceof Element)) return;
+    var toggleButton = target.closest("#theme-toggle-desktop, #theme-toggle-mobile");
+    if (!toggleButton) return;
+    event.preventDefault();
+    toggleTheme(toggleButton);
+  };
+
+  window.__themeDelegateHandler = nextThemeHandler;
+  document.addEventListener("click", nextThemeHandler, true);
+  updateThemeIcons();
+
+  var toggleMenu = function() {
+    menu?.classList.toggle("hidden");
+    var isHidden = menu?.classList.contains("hidden");
+    button?.setAttribute("aria-expanded", "" + !isHidden);
+  };
+
+  button?.addEventListener("click", toggleMenu);
+  navItems.forEach(function(item) {
+    item?.addEventListener("click", toggleMenu);
+  });
+
+  // Update navigation based on scroll position with Intersection Observer
+  const sectionIds = Array.from(document.querySelectorAll("section[id]")).map(s => s.id);
+  var activeId = "";
+
+  var observer = new IntersectionObserver(
+    function(entries) {
+      entries.forEach(function(entry) {
+        if (entry.isIntersecting) {
+          activeId = entry.target.id;
+        }
+      });
+      navItems.forEach(function(item) {
+        var href = item.getAttribute("href");
+        if (href === "#" + activeId) {
+          item.classList.add("text-white", "after:!opacity-100");
+        } else if (href?.startsWith("#")) {
+          item.classList.remove("text-white", "after:!opacity-100");
+        }
+      });
+    },
+    { rootMargin: "-30% 0px -50% 0px", threshold: 0 },
+  );
+
+  document.querySelectorAll("section[id]").forEach(function(section) {
+    observer.observe(section);
+  });
+  }
+
+  initHeader();
+  document.addEventListener("astro:page-load", initHeader);
+</script>
+
+<style>
+  header {
+    animation-timeline: scroll();
+    animation-range: 0 650px;
+  }
+</style>

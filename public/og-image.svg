@@ -1,0 +1,109 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0a0a0a"/>
+      <stop offset="100%" stop-color="#1a1a2e"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- Subtle grid pattern -->
+  <g opacity="0.04" stroke="#fff" stroke-width="0.5">
+    <line x1="0" y1="0" x2="0" y2="630" transform="translate(60,0)"/>
+    <line x1="0" y1="0" x2="0" y2="630" transform="translate(120,0)"/>
+    <line x1="0" y1="0" x2="0" y2="630" transform="translate(180,0)"/>
+    <line x1="0" y1="0" x2="0" y2="630" transform="translate(240,0)"/>
+    <line x1="0" y1="0" x2="0" y2="630" transform="translate(300,0)"/>
+    <line x1="0" y1="0" x2="0" y2="630" transform="translate(360,0)"/>
+    <line x1="0" y1="0" x2="0" y2="630" transform="translate(420,0)"/>
+    <line x1="0" y1="0" x2="0" y2="630" transform="translate(480,0)"/>
+    <line x1="0" y1="0" x2="0" y2="630" transform="translate(540,0)"/>
+    <line x1="0" y1="0" x2="0" y2="630" transform="translate(600,0)"/>
+    <line x1="0" y1="0" x2="0" y2="630" transform="translate(660,0)"/>
+    <line x1="0" y1="0" x2="0" y2="630" transform="translate(720,0)"/>
+    <line x1="0" y1="0" x2="0" y2="630" transform="translate(780,0)"/>
+    <line x1="0" y1="0" x2="0" y2="630" transform="translate(840,0)"/>
+    <line x1="0" y1="0" x2="0" y2="630" transform="translate(900,0)"/>
+    <line x1="0" y1="0" x2="0" y2="630" transform="translate(960,0)"/>
+    <line x1="0" y1="0" x2="0" y2="630" transform="translate(1020,0)"/>
+    <line x1="0" y1="0" x2="0" y2="630" transform="translate(1080,0)"/>
+    <line x1="0" y1="0" x2="0" y2="630" transform="translate(1140,0)"/>
+    <line x1="0" y1="0" x2="1200" y2="0" transform="translate(0,60)"/>
+    <line x1="0" y1="0" x2="1200" y2="0" transform="translate(0,120)"/>
+    <line x1="0" y1="0" x2="1200" y2="0" transform="translate(0,180)"/>
+    <line x1="0" y1="0" x2="1200" y2="0" transform="translate(0,240)"/>
+    <line x1="0" y1="0" x2="1200" y2="0" transform="translate(0,300)"/>
+    <line x1="0" y1="0" x2="1200" y2="0" transform="translate(0,360)"/>
+    <line x1="0" y1="0" x2="1200" y2="0" transform="translate(0,420)"/>
+    <line x1="0" y1="0" x2="1200" y2="0" transform="translate(0,480)"/>
+    <line x1="0" y1="0" x2="1200" y2="0" transform="translate(0,540)"/>
+  </g>
+
+  <!-- Decorative circles -->
+  <circle cx="950" cy="150" r="180" fill="none" stroke="#8b5cf6" stroke-width="0.5" opacity="0.1"/>
+  <circle cx="980" cy="130" r="120" fill="none" stroke="#6366f1" stroke-width="0.5" opacity="0.08"/>
+  <circle cx="200" cy="500" r="100" fill="none" stroke="#8b5cf6" stroke-width="0.5" opacity="0.06"/>
+
+  <!-- Accent bar at top -->
+  <rect x="0" y="0" width="1200" height="4" fill="url(#accent)"/>
+
+  <!-- Small dots decoration -->
+  <circle cx="1050" cy="420" r="3" fill="#8b5cf6" opacity="0.3" filter="url(#glow)"/>
+  <circle cx="1100" cy="380" r="2" fill="#6366f1" opacity="0.25"/>
+  <circle cx="1020" cy="460" r="2.5" fill="#8b5cf6" opacity="0.2"/>
+  <circle cx="150" cy="180" r="2" fill="#6366f1" opacity="0.2"/>
+  <circle cx="120" cy="220" r="3" fill="#8b5cf6" opacity="0.15"/>
+
+  <!-- Code bracket decoration -->
+  <text x="900" y="350" font-family="monospace" font-size="200" fill="#8b5cf6" opacity="0.04" font-weight="bold">{}</text>
+
+  <!-- Name -->
+  <text x="80" y="240" font-family="system-ui, -apple-system, sans-serif" font-size="64" font-weight="700" fill="#ffffff" letter-spacing="-1">Shubham Pardule</text>
+
+  <!-- Role with accent -->
+  <text x="80" y="310" font-family="system-ui, -apple-system, sans-serif" font-size="32" font-weight="500" fill="#8b5cf6">Full Stack Developer</text>
+
+  <!-- Description -->
+  <text x="80" y="380" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="#a0a0a0">Building production-ready web apps with modern</text>
+  <text x="80" y="410" font-family="system-ui, -apple-system, sans-serif" font-size="20" fill="#a0a0a0">frontend, robust backend, and cloud-native tooling.</text>
+
+  <!-- Tech tags -->
+  <g font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="500">
+    <rect x="80" y="450" width="65" height="30" rx="15" fill="#8b5cf6" opacity="0.15"/>
+    <text x="112" y="470" fill="#8b5cf6" text-anchor="middle">React</text>
+
+    <rect x="155" y="450" width="75" height="30" rx="15" fill="#8b5cf6" opacity="0.15"/>
+    <text x="192" y="470" fill="#8b5cf6" text-anchor="middle">Next.js</text>
+
+    <rect x="240" y="450" width="70" height="30" rx="15" fill="#8b5cf6" opacity="0.15"/>
+    <text x="275" y="470" fill="#8b5cf6" text-anchor="middle">Node.js</text>
+
+    <rect x="320" y="450" width="60" height="30" rx="15" fill="#8b5cf6" opacity="0.15"/>
+    <text x="350" y="470" fill="#8b5cf6" text-anchor="middle">AWS</text>
+
+    <rect x="390" y="450" width="70" height="30" rx="15" fill="#8b5cf6" opacity="0.15"/>
+    <text x="425" y="470" fill="#8b5cf6" text-anchor="middle">Docker</text>
+
+    <rect x="470" y="450" width="40" height="30" rx="15" fill="#8b5cf6" opacity="0.15"/>
+    <text x="490" y="470" fill="#8b5cf6" text-anchor="middle">Go</text>
+  </g>
+
+  <!-- URL -->
+  <text x="80" y="560" font-family="monospace" font-size="16" fill="#666">shubhampardule.vercel.app</text>
+
+  <!-- Bottom accent bar -->
+  <rect x="0" y="626" width="1200" height="4" fill="url(#accent)"/>
+</svg>

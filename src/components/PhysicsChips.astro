@@ -1,0 +1,407 @@
+---
+/**
+ * Gravity Tech Stack Chips — Matter.js physics simulation.
+ * Chips drop in, collide, settle, and can be dragged/thrown by the user.
+ */
+import type { TechStackGroup } from "@types";
+
+interface Props {
+  techStackGroups: TechStackGroup[];
+}
+
+const { techStackGroups } = Astro.props;
+
+// Flatten all items with their group info for rendering
+const allChips = techStackGroups.flatMap(({ title, items }) =>
+  items.map((item) => ({ label: item, group: title }))
+);
+---
+
+<div class="mt-8">
+  <h4 class="mb-4 text-sm font-medium text-white">Tech Stack</h4>
+  <div id="physics-container" class="relative w-full" style="height: 220px;">
+    <canvas id="physics-canvas" class="absolute inset-0 h-full w-full"></canvas>
+    <!-- Hidden data for JS -->
+    <script
+      id="chip-data"
+      type="application/json"
+      set:html={JSON.stringify(allChips)}
+    />
+  </div>
+</div>
+
+<script>
+  import Matter from "matter-js";
+
+  (async () => {
+  const {
+    Engine,
+    Render,
+    Runner,
+    Bodies,
+    Composite,
+    Mouse,
+    MouseConstraint,
+    Events,
+  } = Matter;
+
+  const container = document.getElementById("physics-container")!;
+  const canvas = document.getElementById("physics-canvas") as HTMLCanvasElement;
+  const chipData: { label: string; group: string }[] = JSON.parse(
+    document.getElementById("chip-data")!.textContent!
+  );
+
+  // --- Icon URL mapping (devicon CDN) ---
+  const ICON_MAP: Record<string, string> = {
+    "React": "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg",
+    "Next.js": "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nextjs/nextjs-original.svg",
+    "Tailwind CSS": "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/tailwindcss/tailwindcss-original.svg",
+    "JavaScript": "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg",
+    "Node.js": "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg",
+    "Express": "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/express/express-original.svg",
+    "Python": "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg",
+    "Go": "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/go/go-original.svg",
+    "MongoDB": "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mongodb/mongodb-original.svg",
+    "C++": "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/cplusplus/cplusplus-original.svg",
+    "C": "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/c/c-original.svg",
+    "AWS": "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/amazonwebservices/amazonwebservices-original-wordmark.svg",
+    "Google Cloud": "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/googlecloud/googlecloud-original.svg",
+    "Azure": "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/azure/azure-original.svg",
+    "Docker": "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg",
+    "Git": "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg",
+    "GitHub": "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg",
+    "Postman": "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postman/postman-original.svg",
+  };
+
+  // Preload all icons as Image objects
+  const iconImages: Record<string, HTMLImageElement> = {};
+  let iconsLoaded = 0;
+  const totalIcons = chipData.length;
+
+  function loadIcons(): Promise<void> {
+    return new Promise((resolve) => {
+      if (totalIcons === 0) { resolve(); return; }
+      chipData.forEach((chip) => {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.onload = img.onerror = () => {
+          iconsLoaded++;
+          if (iconsLoaded >= totalIcons) resolve();
+        };
+        img.src = ICON_MAP[chip.label] || "";
+        iconImages[chip.label] = img;
+      });
+    });
+  }
+
+  function isLightMode() {
+    return document.documentElement.classList.contains("light");
+  }
+
+  // --- Chip size (circular) ---
+  const CHIP_SIZE = 52;
+
+  function measureChip(_label: string): { w: number; h: number } {
+    return { w: CHIP_SIZE, h: CHIP_SIZE };
+  }
+
+  // --- Setup ---
+  const W = container.clientWidth;
+  const H = 220;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+  canvas.style.width = `${W}px`;
+  canvas.style.height = `${H}px`;
+
+  const ctx = canvas.getContext("2d")!;
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+  // Physics engine — start with gravity disabled
+  const engine = Engine.create({
+    gravity: { x: 0, y: 0, scale: 0.001 },
+  });
+
+  // Walls (invisible)
+  const wallThickness = 60;
+  const wallInset = 10; // keep chips away from edges
+  const walls = [
+    Bodies.rectangle(W / 2, H + wallThickness / 2 - 5, W + 100, wallThickness, { isStatic: true, render: { visible: false } }),   // floor
+    Bodies.rectangle(-wallThickness / 2 + wallInset, H / 2, wallThickness, H * 2, { isStatic: true, render: { visible: false } }),  // left
+    Bodies.rectangle(W + wallThickness / 2 - wallInset, H / 2, wallThickness, H * 2, { isStatic: true, render: { visible: false } }), // right
+    Bodies.rectangle(W / 2, -wallThickness / 2, W + 100, wallThickness, { isStatic: true, render: { visible: false } }),              // ceiling
+  ];
+  Composite.add(engine.world, walls);
+
+  // Create chip bodies
+  interface ChipInfo {
+    body: Matter.Body;
+    label: string;
+    group: string;
+    w: number;
+    h: number;
+  }
+
+  const chips: ChipInfo[] = [];
+
+  // Load icons first, then create bodies
+  await loadIcons();
+
+  chipData.forEach((chip, i) => {
+    const { w } = measureChip(chip.label);
+    const radius = w / 2;
+    // Stagger drops: random x, start just inside the top
+    const x = 40 + Math.random() * (W - 80);
+    const y = 5 + Math.random() * 20 + i * 2;
+
+    const body = Bodies.circle(x, y, radius, {
+      restitution: 0.4,
+      friction: 0.4,
+      frictionAir: 0.12,
+      density: 0.003,
+      angle: (Math.random() - 0.5) * 0.5,
+    });
+
+    chips.push({ body, label: chip.label, group: chip.group, w, h: w });
+    Composite.add(engine.world, body);
+  });
+
+  // --- Mouse hover repulsion ---
+  let mouseX = -9999;
+  let mouseY = -9999;
+  const HOVER_RADIUS = 100;
+  const HOVER_FORCE = 0.04;
+
+  const heroSection = canvas.parentElement!;
+  heroSection.addEventListener("mousemove", (e: MouseEvent) => {
+    const rect = heroSection.getBoundingClientRect();
+    mouseX = e.clientX - rect.left;
+    mouseY = e.clientY - rect.top;
+  });
+  heroSection.addEventListener("mouseleave", () => {
+    mouseX = -9999;
+    mouseY = -9999;
+  });
+
+  // Touch: repel on touch move
+  heroSection.addEventListener("touchmove", (e: TouchEvent) => {
+    const rect = heroSection.getBoundingClientRect();
+    mouseX = e.touches[0].clientX - rect.left;
+    mouseY = e.touches[0].clientY - rect.top;
+  }, { passive: true });
+  heroSection.addEventListener("touchend", () => {
+    mouseX = -9999;
+    mouseY = -9999;
+  });
+
+  // Apply hover repulsion each engine update
+  const TRAIL_RADIUS = 60;
+  const TRAIL_FORCE = 0.025;
+
+  Events.on(engine, "beforeUpdate", () => {
+    for (const chip of chips) {
+      // Mouse repulsion
+      const dx = chip.body.position.x - mouseX;
+      const dy = chip.body.position.y - mouseY;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      if (dist < HOVER_RADIUS && dist > 0) {
+        const strength = (1 - dist / HOVER_RADIUS) * HOVER_FORCE;
+        Matter.Body.applyForce(chip.body, chip.body.position, {
+          x: (dx / dist) * strength,
+          y: (dy / dist) * strength,
+        });
+      }
+
+      // Trail dot repulsion — each trailing dot also pushes chips
+      const trailDots = (window as any).__trailDots as { x: number; y: number; size: number }[] | undefined;
+      if (trailDots) {
+        const containerRect = container.getBoundingClientRect();
+        for (let i = 0; i < trailDots.length; i += 2) { // check every other dot for perf
+          const td = trailDots[i];
+          const tdx = chip.body.position.x - (td.x - containerRect.left);
+          const tdy = chip.body.position.y - (td.y - containerRect.top);
+          const tdist = Math.sqrt(tdx * tdx + tdy * tdy);
+          if (tdist < TRAIL_RADIUS && tdist > 0) {
+            const tstrength = (1 - tdist / TRAIL_RADIUS) * TRAIL_FORCE;
+            Matter.Body.applyForce(chip.body, chip.body.position, {
+              x: (tdx / tdist) * tstrength,
+              y: (tdy / tdist) * tstrength,
+            });
+          }
+        }
+      }
+    }
+  });
+
+  // --- Drawing ---
+  function roundedRectPath(rx: number, ry: number, r: number) {
+    ctx.beginPath();
+    ctx.moveTo(-rx + r, -ry);
+    ctx.lineTo(rx - r, -ry);
+    ctx.quadraticCurveTo(rx, -ry, rx, -ry + r);
+    ctx.lineTo(rx, ry - r);
+    ctx.quadraticCurveTo(rx, ry, rx - r, ry);
+    ctx.lineTo(-rx + r, ry);
+    ctx.quadraticCurveTo(-rx, ry, -rx, ry - r);
+    ctx.lineTo(-rx, -ry + r);
+    ctx.quadraticCurveTo(-rx, -ry, -rx + r, -ry);
+    ctx.closePath();
+  }
+
+  function drawChip(chip: ChipInfo) {
+    const { body, label, w, h } = chip;
+    const pos = body.position;
+    const angle = body.angle;
+    const light = isLightMode();
+    const radius = w / 2;
+
+    ctx.save();
+    ctx.translate(pos.x, pos.y);
+    ctx.rotate(angle);
+
+    // Circle background
+    ctx.beginPath();
+    ctx.arc(0, 0, radius, 0, Math.PI * 2);
+    ctx.fillStyle = light ? "#e2e8f0" : "#1e293b";
+    ctx.fill();
+
+    // Subtle border
+    ctx.strokeStyle = light ? "rgba(0,0,0,0.12)" : "rgba(255,255,255,0.12)";
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // Draw icon
+    const img = iconImages[label];
+    if (img && img.complete && img.naturalWidth > 0) {
+      const iconSize = w * 0.55;
+      // For dark icons in dark mode (Next.js, Express, GitHub), invert
+      const needsInvert = !light && ["Next.js", "Express", "GitHub"].includes(label);
+      if (needsInvert) {
+        ctx.filter = "invert(1)";
+      }
+      ctx.drawImage(img, -iconSize / 2, -iconSize / 2, iconSize, iconSize);
+      ctx.filter = "none";
+    } else {
+      // Fallback: draw first letter
+      ctx.fillStyle = light ? "#334155" : "#cbd5e1";
+      ctx.font = `600 18px "Be Vietnam Pro", system-ui, sans-serif`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(label[0], 0, 1);
+    }
+
+    ctx.restore();
+  }
+
+  function render() {
+    ctx.clearRect(0, 0, W, H);
+    for (const chip of chips) {
+      drawChip(chip);
+    }
+  }
+
+  // --- Game loop ---
+  const runner = Runner.create();
+  let started = false;
+
+  function loop() {
+    render();
+    requestAnimationFrame(loop);
+  }
+  // Start render loop immediately (draws nothing until chips exist)
+  loop();
+
+  // --- Start drop when scrolled into view ---
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting && !started) {
+          started = true;
+          engine.gravity.y = 0.6;
+          Runner.run(runner, engine);
+          observer.disconnect();
+        }
+      }
+    },
+    { threshold: 0.2 }
+  );
+  observer.observe(container);
+
+  // --- Visibility pause ---
+  document.addEventListener("visibilitychange", () => {
+    if (!started) return;
+    if (document.hidden) {
+      Runner.stop(runner);
+    } else {
+      Runner.run(runner, engine);
+    }
+  });
+
+  // --- Resize handling ---
+  let resizeTimeout: number;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = window.setTimeout(() => {
+      // For simplicity, just update canvas dimensions
+      const newW = container.clientWidth;
+      canvas.width = newW * dpr;
+      canvas.style.width = `${newW}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      // Move right wall
+      Matter.Body.setPosition(walls[2], { x: newW + wallThickness / 2, y: H / 2 });
+      // Move floor
+      Matter.Body.setPosition(walls[0], { x: newW / 2, y: H + wallThickness / 2 });
+    }, 200);
+  });
+
+  // --- Gyroscope / Accelerometer for mobile ---
+  const GRAVITY_STRENGTH = 0.6;
+  let gyroEnabled = false;
+
+  function handleOrientation(e: DeviceOrientationEvent) {
+    if (!started) return;
+
+    const beta = e.beta ?? 0;   // front-to-back tilt (-180 to 180)
+    const gamma = e.gamma ?? 0; // left-to-right tilt (-90 to 90)
+
+    // Clamp tilt angles
+    const clampedBeta = Math.max(-45, Math.min(45, beta));
+    const clampedGamma = Math.max(-45, Math.min(45, gamma));
+
+    // Map tilt to gravity (normalize to -1..1 range, then scale)
+    engine.gravity.x = (clampedGamma / 45) * GRAVITY_STRENGTH;
+    engine.gravity.y = (clampedBeta / 45) * GRAVITY_STRENGTH;
+
+    // Ensure minimum downward gravity so chips don't float away
+    if (engine.gravity.y < 0.15) engine.gravity.y = 0.15;
+  }
+
+  function enableGyro() {
+    if (gyroEnabled) return;
+    gyroEnabled = true;
+    window.addEventListener("deviceorientation", handleOrientation);
+  }
+
+  // iOS 13+ requires permission request
+  if (typeof (DeviceOrientationEvent as any).requestPermission === "function") {
+    // Request on first user interaction (touch)
+    const requestGyro = () => {
+      (DeviceOrientationEvent as any)
+        .requestPermission()
+        .then((response: string) => {
+          if (response === "granted") enableGyro();
+        })
+        .catch(() => {});
+      canvas.removeEventListener("touchstart", requestGyro);
+      container.removeEventListener("touchstart", requestGyro);
+    };
+    canvas.addEventListener("touchstart", requestGyro, { once: true });
+    container.addEventListener("touchstart", requestGyro, { once: true });
+  } else if ("DeviceOrientationEvent" in window) {
+    // Android and other browsers — enable directly
+    enableGyro();
+  }
+  })();
+</script>

@@ -1,0 +1,88 @@
+---
+import Section from "./Section.astro";
+import { Image } from "astro:assets";
+import type { ProjectProps } from "@types";
+
+interface Props {
+  projects: ProjectProps[];
+}
+
+const { projects } = Astro.props;
+---
+
+<Section text="Featured Projects" href="projects">
+  {
+    projects.map(({ name, summary, image, linkPreview, linkSource }, index) => {
+      const top = 98 + index * 40;
+      return (
+        <div
+          class="sticky mb-12"
+          style={`top: ${top}px; perspective: 800px;`}
+        >
+          <div class="project-card-inner project-tilt relative z-[1] grid w-full grid-rows-[auto_1fr] rounded-2xl border border-neutral/20 bg-black sm:grid-cols-2 sm:grid-rows-1 sm:h-96" style="transition: transform 0.15s ease-out; will-change: transform;">
+            <div class="px-6 pt-12">
+              <h3 class="mb-5 font-serif text-xl font-medium text-primary sm:text-3xl">
+                {name}
+              </h3>
+              <p class="text-base text-neutral">{summary}</p>
+              <div class="flex gap-5 pt-10 text-white">
+                <a
+                  href={linkSource}
+                  target="_blank"
+                  class="after:relative after:bottom-[-5px] after:content-[url(/external.svg)] hover:underline"
+                >
+                  Source
+                </a>
+                <a
+                  href={linkPreview}
+                  target="_blank"
+                  class="after:relative after:bottom-[-5px] after:content-[url(/external.svg)] hover:underline"
+                >
+                  Preview
+                </a>
+              </div>
+            </div>
+            <div class="flex items-center justify-center overflow-hidden rounded-b-2xl sm:rounded-bl-none sm:rounded-r-2xl">
+              <Image
+                class="h-full w-full object-cover object-left"
+                src={image}
+                alt={name}
+                width="736"
+                height="483"
+                loading="lazy"
+                decoding="async"
+              />
+            </div>
+          </div>
+        </div>
+      );
+    })
+  }
+</Section>
+
+<script is:inline>
+  function initTilt() {
+    var cards = document.querySelectorAll(".project-tilt");
+    cards.forEach(function(card) {
+      if (card.dataset.tiltBound) return;
+      card.dataset.tiltBound = "1";
+      var parent = card.parentElement;
+
+      parent.addEventListener("mousemove", function(e) {
+        var rect = parent.getBoundingClientRect();
+        var x = (e.clientX - rect.left) / rect.width;
+        var y = (e.clientY - rect.top) / rect.height;
+        var rotateY = (x - 0.5) * 10;
+        var rotateX = (0.5 - y) * 8;
+        card.style.transform = "rotateX(" + rotateX + "deg) rotateY(" + rotateY + "deg) scale(1.02)";
+      });
+
+      parent.addEventListener("mouseleave", function() {
+        card.style.transform = "rotateX(0deg) rotateY(0deg) scale(1)";
+      });
+    });
+  }
+
+  initTilt();
+  document.addEventListener("astro:page-load", initTilt);
+</script>

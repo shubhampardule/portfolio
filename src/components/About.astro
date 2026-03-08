@@ -1,0 +1,35 @@
+---
+import Section from "./Section.astro";
+import { Image } from "astro:assets";
+import type { AboutProps, HeroProps } from "@types";
+import PhysicsChips from "./PhysicsChips.astro";
+
+type Props = AboutProps & Pick<HeroProps, "name">;
+
+const { description, image, name, techStackGroups = [] } = Astro.props;
+---
+
+<Section text="About Me" href="about">
+  <div class="flex flex-col items-center gap-12 md:flex-row md:gap-8">
+    <div class="w-auto md:pr-5">
+      <p class="text-base text-neutral">{description}</p>
+
+      {techStackGroups.length > 0 && (
+        <PhysicsChips techStackGroups={techStackGroups} />
+      )}
+    </div>
+    <div
+      class="h-60 w-48 flex-shrink-0 rotate-[5deg] bg-white p-3 sm:h-80 sm:w-64 sm:p-4 md:rotate-[7deg]"
+    >
+      <Image
+        class="object-cover"
+        src={image}
+        width="260"
+        height="260"
+        alt={name}
+        loading="lazy"
+        decoding="async"
+      />
+    </div>
+  </div>
+</Section>
