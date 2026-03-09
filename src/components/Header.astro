@@ -101,7 +101,7 @@ const { siteLogo, navLinks } = Astro.props;
           </li>
         ))
       }
-      <li class="relative sm:block">
+      <li class="relative hidden sm:block">
         <button
           type="button"
           id="theme-toggle-desktop"
@@ -306,9 +306,17 @@ const { siteLogo, navLinks } = Astro.props;
     button?.setAttribute("aria-expanded", "" + !isHidden);
   };
 
-  button?.addEventListener("click", toggleMenu);
+  // Direct handlers are more reliable on mobile than delegated capture listeners.
+  if (button) {
+    button.onclick = function(event) {
+      event.preventDefault();
+      toggleMenu();
+    };
+  }
   navItems.forEach(function(item) {
-    item?.addEventListener("click", toggleMenu);
+    item.onclick = function() {
+      if (!menu?.classList.contains("hidden")) toggleMenu();
+    };
   });
 
   // Update navigation based on scroll position with Intersection Observer
